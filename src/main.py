@@ -8,6 +8,8 @@ import tensorflow
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D
 from tensorflow.keras.layers import Activation, Flatten
+import glob
+import subprocess
 
 IMG_SIZE = 50
 DATA="/home/enulp/ressources/train_set"
@@ -97,12 +99,53 @@ def is_gconfs(model, filepath):
     prediction = model.predict([prepare(filepath)])
     return CATEGORIES[int(prediction[0][0])] == 'gconfs'
 
-def main():
+def download_stream(url):
+    subprocess.call(["youtube-dl", url, '-o', 'stream.webm'])
+
+def video_to_images(path):
+    subprocess.call(["ffmpeg", "-i", path, "-vf", "fps=0.1", "stream%04d.png"])
+
+def find_breaks():
+    breaks = []
+    break_time = True
     model = tensorflow.keras.models.load_model("GAI.model")
-    print(is_gconfs(model, 'gconf.png'))
+    all_images = glob.glob("stream*.png")
+    all_images.sort()
+    counter = 0
 
-#data_set = create_training_data()
-#save_training_data(data_set)
-#train_and_save_model()
+    while counter < len(all_images) and is_gconfs(model, all_images[counter]):
+        counter += 1
 
-main()
+    while counter < len(all_images):
+        if (not is_gconfs(model, all_images[counter])):
+            start = (counter - 1) * 10
+            counter += 1
+            while (counter < len(all_images) and not is_gconfs(model, all_images[counter])):
+                counter += 1
+            end = counter * 10
+            breaks.append((start, end))
+        counter += 1
+
+    return breaks
+
+
+def cut_stream(name, start, end):
+    start_h = start // (60 * 60)
+    start_m = (start - start_h * 60 * 60) // 60
+    start_s = start - start_h * 60 * 60 - start_m * 60
+    start_time = str(start_h) + ":" + str(start_m) + ":" + str(start_s)
+
+    end_h = end // (60 * 60)
+    end_m = (end - end_h * 60 * 60) // 60
+    end_s = end - end_h * 60 * 60 - end_m * 60
+    end_time = str(end_h) + ":" + str(end_m) + ":" + str(end_s)
+
+    video_name = name + str(start) + '-' + str(end) + '.mkv'
+    subprocess.call(["ffmpeg", "-i", name, "-ss", start_time, "-to", end_time, video_name])
+
+def split_video(name):
+    breaks = find_breaks()
+    for (start, end) in breaks:
+        cut_stream(name, start, end)
+
+split_video('video.mkv')
