@@ -2,3 +2,6 @@ tensorflow
 numpy
 opencv
 matplotlib
+tqdm
+pickle-mixin
+glob3
