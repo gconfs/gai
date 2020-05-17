@@ -8,6 +8,8 @@ This program let you automates the split of streams into multiple videos
 git clone
 cd gstream
 xargs -a bash-requirements.txt sudo apt-get install
+python3 -m venv env
+source env/bin/activate
 pip install -r python-requirements.txt
 ```
 
