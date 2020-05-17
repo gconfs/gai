@@ -144,6 +144,7 @@ def cut_stream(name, start, end):
     subprocess.call(["ffmpeg", "-i", name, "-ss", start_time, "-to", end_time, video_name])
 
 def split_video(name):
+    video_to_images(name)
     breaks = find_breaks()
     for (start, end) in breaks:
         cut_stream(name, start, end)
