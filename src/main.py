@@ -10,6 +10,7 @@ from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D
 from tensorflow.keras.layers import Activation, Flatten
 import glob
 import subprocess
+import sys
 
 IMG_SIZE = 50
 DATA="/home/enulp/ressources/train_set"
@@ -30,9 +31,8 @@ def create_training_data():
                 training_data.append([new_array, class_num])
             except Exception as e:
                 pass
-    training_data
     random.shuffle(training_data)
-    return training_data
+    save_training_data(training_data)
 
 def save_training_data(training_data):
     X = []
@@ -84,8 +84,8 @@ def train_and_save_model():
     model.add(Activation('sigmoid'))
 
     model.compile(loss='binary_crossentropy',
-        optimizer='adam',
-        metrics=['accuracy'])
+            optimizer='adam',
+            metrics=['accuracy'])
 
     model.fit(X, Y, batch_size = 100, epochs = 50, validation_split = 0.3)
     model.save('GAI.model')
@@ -148,4 +148,28 @@ def split_video(name):
     for (start, end) in breaks:
         cut_stream(name, start, end)
 
-split_video('video.mkv')
+def main():
+    i = sys.argv[1]
+    if (i == '-h' or i == '-help'):
+        print(''' Welcome to GAI, Gconfs Artifical Intelligence:
+    -h:
+    --help: print all options
+    -s [arg]
+    --split [arg]: split the video named [arg]
+    --ds: [arg]
+    --download-split [arg]: download video with url [arg] and split it
+    -t:
+    --train: train the neural network
+    -d:
+    --data: create the database to train the data''')
+    elif (i == '-s' or i == '--split'):
+        split_video(sys.argv[2])
+    elif (i == '-t' or i == '--train'):
+        train_and_save_model()
+    elif (i == '-d' or i == '--data'):
+        create_training_data()
+    elif (i == '--ds' or i == '--download-split'):
+        download_stream(sys.argv[2])
+        split_video('stream.webm')
+
+main()
