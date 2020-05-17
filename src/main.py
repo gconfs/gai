@@ -13,7 +13,7 @@ import subprocess
 import sys
 
 IMG_SIZE = 50
-DATA="/home/enulp/ressources/train_set"
+DATA="../ressources/train_set"
 CATEGORIES=["gconfs", "gconf"]
 
 
